@@ -1,42 +1,55 @@
 'use client';
+import { useState } from 'react';
 import { useFriends } from '@/context/FriendContext';
-import { Phone, Video, MessageSquare, Calendar } from 'lucide-react';
+import { Phone, MessageSquare, Video, Search } from 'lucide-react';
 
 export default function TimelinePage() {
   const { timeline } = useFriends();
+  const [filter, setFilter] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const getIcon = (type) => {
-    if (type === 'Call') return <Phone className="text-blue-500" />;
-    if (type === 'Video') return <Video className="text-purple-500" />;
-    return <MessageSquare className="text-green-500" />;
-  };
+  const filteredTimeline = timeline
+    .filter(t => (filter === 'All' || t.type === filter))
+    .filter(t => t.friendName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="container mx-auto px-6 py-12 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-8">Timeline</h1>
+      <h1 className="text-3xl font-black text-[#1D3D33] mb-8">Timeline</h1>
       
-      {timeline.length === 0 ? (
-        <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed">
-          <Calendar className="mx-auto mb-4 text-gray-300" size={48} />
-          <p className="text-gray-500">No interactions logged yet. Start checking in with friends!</p>
+      <div className="flex flex-col md:flex-row gap-4 mb-10">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+          <input 
+            type="text" placeholder="Search by name..." 
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-      ) : (
-        <div className="space-y-4">
-          {timeline.map((entry) => (
-            <div key={entry.id} className="bg-white p-6 rounded-2xl shadow-sm border flex items-center gap-6 animate-in fade-in slide-in-from-bottom-4">
-              <div className="p-4 bg-gray-50 rounded-xl">
-                {getIcon(entry.type)}
+        <select className="px-4 py-2 rounded-lg border border-gray-200" onChange={(e) => setFilter(e.target.value)}>
+          <option value="All">All Types</option>
+          <option value="Call">Calls</option>
+          <option value="Text">Texts</option>
+          <option value="Video">Videos</option>
+        </select>
+      </div>
+
+      <div className="space-y-4">
+        {filteredTimeline.map(item => (
+          <div key={item.id} className="flex items-center justify-between bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gray-50 rounded-full text-[#1D3D33]">
+                {item.type === 'Call' && <Phone size={20} />}
+                {item.type === 'Text' && <MessageSquare size={20} />}
+                {item.type === 'Video' && <Video size={20} />}
               </div>
               <div>
-                <h3 className="font-bold text-lg">
-                  {entry.type} with <span className="text-[#1D3D33]">{entry.friendName}</span>
-                </h3>
-                <p className="text-sm text-gray-400">{entry.date}</p>
+                <p className="font-bold text-[#1D3D33]">{item.type} with {item.friendName}</p>
+                <p className="text-xs text-gray-400 font-semibold uppercase">{item.date}</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
