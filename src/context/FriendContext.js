@@ -1,41 +1,42 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+// Import directly from your data folder
+import friendsData from '../data/friends.json'; 
 
 const FriendContext = createContext();
 
 export function FriendProvider({ children }) {
-  // We initialize the timeline with an empty array
+  const [friends, setFriends] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Requirement 6: Function to add a new interaction (Call, Text, Video)
-  const addTimelineEntry = (friendName, type) => {
+  useEffect(() => {
+    // Since we are importing locally, we just set the state
+    setFriends(friendsData);
+    setLoading(false);
+  }, []);
+
+  const addInteraction = (friendName, type) => {
     const newEntry = {
-      id: Date.now(), // Unique ID based on time
+      id: Date.now(),
       friendName,
-      type, // 'Call', 'Text', or 'Video'
-      date: new Date().toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      }),
+      type,
+      date: new Date().toLocaleDateString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })
     };
-
-    // Add the new entry to the top of the list (newest first)
-    setTimeline((prevTimeline) => [newEntry, ...prevTimeline]);
+    setTimeline(prev => [newEntry, ...prev]);
+    toast.success(`Logged ${type} with ${friendName}!`);
   };
 
   return (
-    <FriendContext.Provider value={{ timeline, addTimelineEntry }}>
+    <FriendContext.Provider value={{ friends, timeline, loading, addInteraction }}>
       {children}
     </FriendContext.Provider>
   );
 }
 
-// Custom hook so we can easily use this data in any component
-export const useFriends = () => {
-  const context = useContext(FriendContext);
-  if (!context) {
-    throw new Error('useFriends must be used within a FriendProvider');
-  }
-  return context;
-};
+export const useFriends = () => useContext(FriendContext);
